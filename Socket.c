@@ -71,7 +71,7 @@ void Socket_send(int sockfd)
 
         address.sin_family = AF_INET;
         address.sin_port = htons(54321);
-        address.sin_addr.s_addr = htons(htons(r->addr) | ~((1 << (32 - r->mask )) - 1));
+        address.sin_addr.s_addr = r->addr | ~((1 << (32 - r->mask)) - 1);
 
         char *message = "Hello from hell!";
         ssize_t message_len = strlen(message);
