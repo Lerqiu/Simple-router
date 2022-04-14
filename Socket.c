@@ -18,6 +18,13 @@ int Socket_create()
         exit(EXIT_FAILURE);
     }
 
+    int broadcastEnable = 1;
+    if (setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, &broadcastEnable, sizeof(broadcastEnable));)
+    {
+        fprintf(stderr, "socket error: %s\n", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
     struct sockaddr_in address;
     bzero(&address, sizeof(address));
     address.sin_family = AF_INET;
