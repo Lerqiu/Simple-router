@@ -7,6 +7,7 @@
 #include <errno.h>
 #include "Repository.h"
 #include <assert.h>
+#include "Output.h"
 
 int Socket_create()
 {
@@ -51,6 +52,7 @@ void Socket_listening(int sockfd, unsigned long time)
         if (FD_ISSET(sockfd, &readfds))
             printf("Some package come");
     }
+    Output_all();
 }
 
 void Socket_send(int sockfd)
@@ -69,7 +71,7 @@ void Socket_send(int sockfd)
 
         address.sin_family = AF_INET;
         address.sin_port = htons(54321);
-        address.sin_addr.s_addr = htons(r->addr | ((1ul << (32 - r->mask)) - 1));
+        address.sin_addr.s_addr = htons(r->addr | ~((1 << (32 - r->mask)) - 1));
 
         char *message = "Hello from hell!";
         ssize_t message_len = strlen(message);
