@@ -8,6 +8,9 @@
 #include "Repository.h"
 #include <assert.h>
 #include "Output.h"
+#include "Routing.h"
+#include "IP_helper.h"
+#include "Main.h"
 
 int Socket_create()
 {
@@ -19,7 +22,7 @@ int Socket_create()
     }
 
     int broadcastEnable = 1;
-    if (setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, &broadcastEnable, sizeof(broadcastEnable));)
+    if (setsockopt(sockfd, SOL_SOCKET, SO_BROADCAST, &broadcastEnable, sizeof(broadcastEnable)))
     {
         fprintf(stderr, "socket error: %s\n", strerror(errno));
         exit(EXIT_FAILURE);
@@ -43,8 +46,8 @@ int Socket_create()
 void Socket_listening(int sockfd, unsigned long time)
 {
     struct timeval timeout;
-    timeout.tv_sec = 0;
-    timeout.tv_usec = time;
+    timeout.tv_sec = time;
+    timeout.tv_usec = 0;
 
     while (timeout.tv_sec > 0 || timeout.tv_usec > 0)
     {
@@ -57,7 +60,7 @@ void Socket_listening(int sockfd, unsigned long time)
         assert(selectResult >= 0);
 
         if (FD_ISSET(sockfd, &readfds))
-            printf("Some package come");
+            Routing_receive(sockfd);
     }
     Output_all();
 }
@@ -65,12 +68,12 @@ void Socket_listening(int sockfd, unsigned long time)
 void Socket_send(int sockfd)
 {
     Record **records = Repository_getAll();
-    int n = Repository_getSize();
+    unsigned n = Repository_getSize();
 
-    for (int i = 0; i < n; i++)
+    for (unsigned i = 0; i < n; i++)
     {
-        Record *r = records[i];
-        if (!r->isDirectly)
+        Record *record = records[i];
+        if (!record->isDirectly)
             continue;
 
         struct sockaddr_in address;
@@ -78,14 +81,19 @@ void Socket_send(int sockfd)
 
         address.sin_family = AF_INET;
         address.sin_port = htons(54321);
-        address.sin_addr.s_addr = htobe32(r->addr | ((1 << (32 - r->mask)) - 1));
+        address.sin_addr.s_addr = htobe32(IP_Broadcast(record->addr, record->mask));
 
-        char *message = "Hello from hell!";
-        ssize_t message_len = strlen(message);
-        if (sendto(sockfd, message, message_len, 0, (struct sockaddr *)&address, sizeof(address)) != message_len)
+        for (unsigned y = 0; y < n; y++)
         {
-            fprintf(stderr, "sendto error: %s\n", strerror(errno));
-            exit(EXIT_FAILURE);
+            if (y != i)
+            {
+                if (sendto(sockfd, Record_to_udpMessage(record), UDP_MESSAGE_SIZE, 0, (struct sockaddr *)&address, sizeof(address)) != UDP_MESSAGE_SIZE)
+                {
+                    fprintf(stderr, "sendto error: %s\n", strerror(errno));
+                    // exit(EXIT_FAILURE);
+                    record->silentToursN = MAX_ALIVE;
+                }
+            }
         }
     }
 }

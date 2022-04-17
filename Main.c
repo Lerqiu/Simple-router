@@ -16,8 +16,10 @@ int main(int argc, char *argv[])
 
   while (true)
   {
-    Socket_listening(sockfd, MAXTIMEOUT_us);
+    Socket_listening(sockfd, MAXTIMEOUT);
     Socket_send(sockfd);
+    Routing_removeOld();
+    Routing_age();
   }
 
   Repository_free();

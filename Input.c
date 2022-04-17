@@ -7,6 +7,7 @@
 
 #include "Input.h"
 #include "Repository.h"
+#include "IP_helper.h"
 
 Record *Input_getRecord()
 {
@@ -26,7 +27,8 @@ Record *Input_getRecord()
         fprintf(stderr, "Wrong record format | N: %u | %d\n", ++counter,rr);
         exit(EXIT_FAILURE);
     }
-    record->addr = (a1 << (3*8)) | (a2 << (2*8)) | (a3 << (1*8)) | a4;
+    record->nextAddr = (a1 << (3*8)) | (a2 << (2*8)) | (a3 << (1*8)) | a4;
+    record->addr = IP_Broadcast(record->nextAddr,record->mask);
     return record;
 }
 

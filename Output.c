@@ -45,5 +45,6 @@ void Output_all()
     unsigned n = Repository_getSize();
 
     for (unsigned i = 0; i < n; i++)
-        Output_one(records[i]);
+        if (records[i]->isActive)
+            Output_one(records[i]);
 }

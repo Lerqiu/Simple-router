@@ -3,7 +3,7 @@ CFLAGS  = -Wall -Werror -std=gnu17 -ggdb3 -Og
 LDFLAGS =
 PRG     = MyRouter
 
-OBJFILE =  Repository.o Output.o  Main.o  Input.o Socket.o
+OBJFILE =  Repository.o Output.o  Main.o  Input.o Socket.o Routing.o IP_helper.o
 
 ${PRG}: ${OBJFILE}
 	${CC} ${OBJFILE} ${LDFLAGS} -o $@
