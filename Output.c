@@ -27,6 +27,9 @@ static void _printAddr(uint32_t addr)
 
 void Output_one(Record *record)
 {
+    static unsigned counter = 0;
+    printf("W:%u\n",counter++);
+    
     _printAddr(record->addr);
     printf("/%u ", record->mask);
 

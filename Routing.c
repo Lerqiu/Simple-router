@@ -9,6 +9,7 @@
 #include "IP_helper.h"
 #include "Main.h"
 #include <limits.h>
+#include "Output.h"
 
 static bool _isAddrOfNeighbour(uint32_t addr)
 {
@@ -26,10 +27,20 @@ static void _merge(Repository *repo, Record *record)
             oldEntry->distance = record->distance;
             oldEntry->nextAddr = record->nextAddr;
         }
+        if (record->nextAddr == oldEntry->nextAddr)
+        {
+            oldEntry->distance = record->distance;
+        }
         oldEntry->silentToursN = 0;
+        printf("Modyfikacja wpisu: ");
+        Output_one(oldEntry);
     }
     else
+    {
         Repository_addEntry(repo, record->addr, record->mask, record->nextAddr, record->distance);
+        printf("Dodawanie wpisu: ");
+        Output_one(record);
+    }
 }
 
 void _updateRoutingTable(Record *received)
@@ -41,10 +52,6 @@ void _updateRoutingTable(Record *received)
     _merge(RAlive, prevNext);
     received->distance = received->distance == UINT_MAX ? UINT_MAX : prevNext->distance + received->distance;
     _merge(RAlive, received);
-
-    Record *current = Repository_getEntry(RAlive, received->addr);
-    if (current->nextAddr == received->nextAddr)
-        current->distance = received->distance;
 }
 
 void Routing_receive(int sockfd)
@@ -91,6 +98,14 @@ void Routing_removeOld()
         if (record->silentToursN > REMOVE_THRESHOLD)
         {
             i--;
+            if (Repository_getEntryByNext(Repository_GetDirectly(), record->nextAddr))
+            {
+                for (unsigned y = 0; y < RAlive->n; y++)
+                    if (RAlive->records[y]->nextAddr == record->nextAddr)
+                        RAlive->records[y]->distance = MAX_DISTANCE;
+            }
+            printf("Usuwanie wpisu: ");
+            Output_one(record);
             Repository_removeEntry(RAlive, record);
         }
     }
