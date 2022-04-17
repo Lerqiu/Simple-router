@@ -35,14 +35,14 @@ static void _merge(Repository *repo, Record *record)
             oldEntry->distance = record->distance;
         }
         oldEntry->silentToursN = 0;
-        printf("Modyfikacja wpisu: ");
-        Output_one(oldEntry);
+        // printf("Modyfikacja wpisu: ");
+        // Output_one(oldEntry);
     }
     else
     {
         Repository_addEntry(repo, record->addr, record->mask, record->nextAddr, record->distance);
-        printf("Dodawanie wpisu: ");
-        Output_one(record);
+        // printf("Dodawanie wpisu: ");
+        // Output_one(record);
     }
 }
 
@@ -107,8 +107,8 @@ void Routing_removeOld()
                     if (RAlive->records[y]->nextAddr == record->nextAddr)
                         RAlive->records[y]->distance = MAX_DISTANCE;
             }
-            printf("Usuwanie wpisu: ");
-            Output_one(record);
+            // printf("Usuwanie wpisu: ");
+            // Output_one(record);
             Repository_removeEntry(RAlive, record);
         }
     }
