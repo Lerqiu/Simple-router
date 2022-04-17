@@ -27,7 +27,10 @@ static void _merge(Repository *repo, Record *record)
             oldEntry->distance = record->distance;
             oldEntry->nextAddr = record->nextAddr;
         }
-        if (record->nextAddr == oldEntry->nextAddr)
+
+        Repository *directly = Repository_GetDirectly();
+        if (record->nextAddr == oldEntry->nextAddr &&
+            !Repository_containsEntry(directly, record->addr))
         {
             oldEntry->distance = record->distance;
         }
