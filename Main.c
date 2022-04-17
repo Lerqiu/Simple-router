@@ -6,10 +6,11 @@
 #include "Output.h"
 #include "Main.h"
 #include "Socket.h"
+#include "Routing.h"
 
 int main(int argc, char *argv[])
 {
-  Repository_init();
+  Repository_Init();
   Output_all();
 
   int sockfd = Socket_create();
@@ -22,7 +23,7 @@ int main(int argc, char *argv[])
     Routing_age();
   }
 
-  Repository_free();
+  Repository_Free();
 
   return EXIT_SUCCESS;
 }

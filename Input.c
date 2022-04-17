@@ -16,9 +16,6 @@ Record *Input_getRecord()
     Record *record = malloc(sizeof(Record));
     assert(record != NULL);
     record->silentToursN = 0;
-    record->isActive = true;
-    record->isDirectly = true;
-    record->nextAddr = 0;
 
     uint8_t a1,a2,a3,a4;
     int rr;
@@ -28,7 +25,7 @@ Record *Input_getRecord()
         exit(EXIT_FAILURE);
     }
     record->nextAddr = (a1 << (3*8)) | (a2 << (2*8)) | (a3 << (1*8)) | a4;
-    record->addr = IP_Broadcast(record->nextAddr,record->mask);
+    record->addr = IP_Network(record->nextAddr,record->mask);
     return record;
 }
 

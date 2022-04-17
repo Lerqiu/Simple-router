@@ -2,8 +2,10 @@
 #define MY_IP_HELPER
 
 #include <inttypes.h>
+#include "Repository.h"
 
 uint32_t IP_Broadcast(uint32_t addr, uint8_t mask);
+uint32_t IP_Network(uint32_t addr, uint8_t mask);
 uint8_t *Record_to_udpMessage(Record * record);
 
 #define UDP_MESSAGE_SIZE 9

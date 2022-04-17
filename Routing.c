@@ -10,6 +10,43 @@
 #include "Main.h"
 #include <limits.h>
 
+static bool _isAddrOfNeighbour(uint32_t addr)
+{
+    Repository *directly = Repository_GetDirectly();
+    return Repository_getEntryByNext(directly, addr);
+}
+
+static void _merge(Repository *repo, Record *record)
+{
+    if (Repository_containsEntry(repo, record->addr))
+    {
+        Record *oldEntry = Repository_getEntry(repo, record->addr);
+        if (oldEntry->distance > record->distance)
+        {
+            oldEntry->distance = record->distance;
+            oldEntry->nextAddr = record->nextAddr;
+        }
+        oldEntry->silentToursN = 0;
+    }
+    else
+        Repository_addEntry(repo, record->addr, record->mask, record->nextAddr, record->distance);
+}
+
+void _updateRoutingTable(Record *received)
+{
+    Repository *RAlive = Repository_GetAlive();
+    Repository *RDirectly = Repository_GetDirectly();
+
+    Record *prevNext = Repository_getEntryByNext(RDirectly, received->nextAddr);
+    _merge(RAlive, prevNext);
+    received->distance = received->distance == UINT_MAX ? UINT_MAX : prevNext->distance + received->distance;
+    _merge(RAlive, received);
+
+    Record *current = Repository_getEntry(RAlive, received->addr);
+    if (current->nextAddr == received->nextAddr)
+        current->distance = received->distance;
+}
+
 void Routing_receive(int sockfd)
 {
     struct sockaddr_in sender;
@@ -23,47 +60,27 @@ void Routing_receive(int sockfd)
         exit(EXIT_FAILURE);
     }
 
-    if (datagram_len == 9 && Repository_contains(be32toh(sender.sin_addr.s_addr)))
+    if (datagram_len == 9 && _isAddrOfNeighbour(be32toh(sender.sin_addr.s_addr)))
     {
-        uint32_t addr = UdpMessage_to_addr(buffer);
-        uint8_t mask = UdpMessage_to_mask(buffer);
-        uint32_t distance = UdpMessage_to_distance(buffer);
-        uint32_t from = be32toh(sender.sin_addr.s_addr);
-        printf("Massage: From<->%u Network<->%u Mask<->%u", from, from, mask);
+        Record record;
+        record.addr = UdpMessage_to_addr(buffer);
+        record.mask = UdpMessage_to_mask(buffer);
+        record.distance = UdpMessage_to_distance(buffer);
+        record.nextAddr = be32toh(sender.sin_addr.s_addr);
+        record.silentToursN = 0;
 
-        Record *recordNext = Repository_getNext(from);
-        if (recordNext)
-        {
-            if (Repository_contains(addr))
-            {
-                Record *record = Repository_get(addr);
-                recordNext->silentToursN = 0;
-                record->silentToursN = 0;
-                record->isActive = true;
-                uint32_t distanceProposition = record->distance + recordNext->distance;
-                uint32_t distance = record->distance;
-                if (distance > distanceProposition)
-                {
-                    record->distance = distanceProposition;
-                    record->nextAddr = from;
-                }
-            }
-            else
-                Repository_add(addr, mask, from, distance);
-        }
+        // printf("Massage: From<->%u Network<->%u Mask<->%u", from, from, mask);
+        _updateRoutingTable(&record);
     }
 }
 
 void Routing_removeOld()
 {
-    Record **records = Repository_getAll();
-    unsigned n = Repository_getSize();
+    Repository *RAlive = Repository_GetAlive();
 
-    for (int i = 0; i < n; i++)
+    for (unsigned i = 0; i < RAlive->n; i++)
     {
-        Record *record = records[i];
-        if (!record->isActive)
-            continue;
+        Record *record = RAlive->records[i];
 
         if (record->silentToursN >= MAX_ALIVE || record->distance >= MAX_DISTANCE)
             record->distance = UINT_MAX;
@@ -73,32 +90,15 @@ void Routing_removeOld()
 
         if (record->silentToursN > REMOVE_THRESHOLD)
         {
-            if (record->isDirectly)
-            {
-                record->isActive = false;
-                continue;
-            }
             i--;
-            Repository_remove(records);
-            records = Repository_getAll();
-            n = Repository_getSize();
+            Repository_removeEntry(RAlive, record);
         }
     }
 }
 
 void Routing_age()
 {
-    Record **records = Repository_getAll();
-    unsigned n = Repository_getSize();
-
-    for (int i = 0; i < n; i++)
-    {
-        records[i]->silentToursN++;
-    }
-}
-
-void Routing_notifyAvailable(Record *record)
-{
-    record->silentToursN = 0;
-    record->isActive = true;
+    Repository *RAlive = Repository_GetAlive();
+    for (unsigned i = 0; i < RAlive->n; i++)
+        RAlive->records[i]->silentToursN++;
 }

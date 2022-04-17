@@ -5,115 +5,134 @@
 #include <stdio.h>
 #include <assert.h>
 
-static Record **repoData = NULL;
-static unsigned repoSize = 0;
+/* ---> Variables <--- */
 
-void Repository_init()
+static Repository RAlive = {.n = 0, .records = NULL};
+static Repository RDirectly = {.n = 0, .records = NULL};
+
+/* ---> Repository static <--- */
+
+static Record *_copyRecord(Record *record)
 {
-    assert(repoData == NULL && repoSize == 0);
-
-    unsigned inputSize = Input_getN();
-
-    repoData = malloc(sizeof(Record *) * inputSize);
-    repoSize = inputSize;
-
-    for (int i = 0; i < inputSize; i++)
-    {
-        repoData[i] = Input_getRecord();
-    }
-
-    assert(repoData != NULL && repoSize > 0);
+    Record *new = malloc(sizeof(Record));
+    new->addr = record->addr;
+    new->distance = record->distance;
+    new->mask = record->mask;
+    new->nextAddr = record->nextAddr;
+    new->silentToursN = record->silentToursN;
+    return new;
 }
 
-void Repository_free()
+void Repository_Init()
 {
-    assert(repoData != NULL && repoSize > 0);
+    RDirectly.n = Input_getN();
+    RAlive.n = RDirectly.n;
 
-    for (int i = 0; i < repoSize; i++)
+    RDirectly.records = malloc(sizeof(Record *) * RDirectly.n);
+    RDirectly.records = malloc(sizeof(Record *) * RDirectly.n);
+
+    for (int i = 0; i < RDirectly.n; i++)
     {
-        free(repoData[i]);
+        RDirectly.records[i] = Input_getRecord();
+        RAlive.records[i] = _copyRecord(RDirectly.records[i]);
     }
-
-    repoData = NULL;
-    repoSize = 0;
-
-    assert(repoData == NULL && repoSize == 0);
+}
+static void _free(Repository *repo)
+{
+    for (int i = 0; i < repo->n; i++)
+    {
+        free(repo->records[i]);
+    }
+    repo->n = 0;
+    repo->records = NULL;
 }
 
-Record **Repository_getAll()
+void Repository_Free()
 {
-    return repoData;
+    _free(&RAlive);
+    _free(&RDirectly);
 }
 
-Record *Repository_get(uint32_t addr)
+Repository *Repository_GetAlive()
 {
-    for (int i = 0; i < repoSize; i++)
+    return &RAlive;
+}
+
+Repository *Repository_GetDirectly()
+{
+    return &RDirectly;
+}
+
+/* ---> Repository nonstatic <--- */
+
+unsigned Repository_getSize(Repository *repo)
+{
+    return repo->n;
+}
+
+Record *Repository_getEntry(Repository *repo, uint32_t addr)
+{
+    for (int i = 0; i < repo->n; i++)
     {
-        if (repoData[i]->addr == addr)
-            return repoData[i];
+        if (repo->records[i]->addr == addr)
+            return repo->records[i];
     }
-    assert(!Repository_contains(addr));
+
     fprintf(stderr, "Repository don't contains %u\n", addr);
     exit(EXIT_FAILURE);
 }
 
-unsigned Repository_getSize()
+Record *Repository_getEntryByNext(Repository *repo, uint32_t addr)
 {
-    return repoSize;
+    for (int i = 0; i < repo->n; i++)
+    {
+        if (repo->records[i]->nextAddr == addr)
+            return repo->records[i];
+    }
+    return NULL;
 }
 
-bool Repository_contains(uint32_t addr)
+bool Repository_containsEntry(Repository *repo, uint32_t addr)
 {
-    for (int i = 0; i < repoSize; i++)
+    for (int i = 0; i < repo->n; i++)
     {
-        if (repoData[i]->addr == addr)
+        if (repo->records[i]->addr == addr)
             return true;
     }
     return false;
 }
 
-Record *Repository_add(uint32_t addr, uint8_t mask, uint32_t next, uint32_t distance)
+Record *Repository_addEntry(Repository *repo, uint32_t addr, uint8_t mask, uint32_t next, uint32_t distance)
 {
     Record *record = malloc(sizeof(Record));
     assert(record != NULL);
     record->silentToursN = 0;
-    record->isActive = true;
-    record->isDirectly = false;
     record->nextAddr = next;
     record->addr = addr;
     record->mask = mask;
     record->distance = distance;
 
-    repoData = realloc(repoData, sizeof(Record *) * ++repoSize);
-    repoData[repoSize - 1] = record;
+    repo->records = realloc(repo->records, sizeof(Record *) * ++repo->n);
+    repo->records[repo->n - 1] = record;
 
     return record;
 }
 
-void Repository_remove(Record *record)
+void Repository_removeEntry(Repository *repo, Record *record)
 {
-    assert(record && repoSize > 0);
-    Record **newData = malloc(sizeof(Record *) * (repoSize - 1));
-    for (unsigned old = 0, new = 0; old < repoSize; old++)
+    Record **newData = malloc(sizeof(Record *) * (repo->n - 1));
+    for (unsigned old = 0, new = 0; old < repo->n; old++)
     {
-        Record *br = repoData[old];
-        if (br == record)
+        Record *repoEntry = repo->records[old];
+        if (repoEntry == record)
+        {
+            free(record);
             continue;
-        newData[new] = repoData[old];
+        }
+        newData[new] = repoEntry;
         new ++;
     }
-    free(repoData);
-    repoData = newData;
-    repoSize--;
-}
-
-Record *Repository_getNext(uint32_t addr)
-{
-    for (int i = 0; i < repoSize; i++)
-    {
-        Record *record = repoData[i];
-        if (record->nextAddr == addr && record->isDirectly)
-            return record;
-    }
-    return NULL;
+    free(repo->records);
+    repo->records = newData;
+    repo->n--;
 }

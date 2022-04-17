@@ -9,24 +9,29 @@ typedef struct
     uint32_t addr;
     uint8_t mask;
     uint32_t distance;
-    bool isDirectly;
-    bool isActive;
     uint8_t silentToursN;
     uint32_t nextAddr;
 } Record;
 
-void Repository_init();
-void Repository_free();
+typedef struct {
+    Record **records;
+    unsigned n;
+} Repository;
 
-Record ** Repository_getAll();
-Record *Repository_get(uint32_t addr);
-unsigned Repository_getSize();
 
-bool Repository_contains(uint32_t addr);
+void Repository_Init();
+void Repository_Free();
 
-Record *Repository_add(uint32_t addr, uint8_t mask, uint32_t next,uint32_t distance);
-Record *Repository_getNext(uint32_t addr);
+Repository *Repository_GetAlive();
+Repository *Repository_GetDirectly();
 
-void Repository_remove(Record *record);
+/* ---> Repository nonstatic <--- */
+
+unsigned Repository_getSize(Repository *repo);
+Record *Repository_getEntry(Repository *repo, uint32_t addr);
+Record *Repository_getEntryByNext(Repository *repo, uint32_t addr);
+bool Repository_containsEntry(Repository *repo, uint32_t addr);
+Record *Repository_addEntry(Repository *repo, uint32_t addr, uint8_t mask, uint32_t next, uint32_t distance);
+void Repository_removeEntry(Repository *repo, Record *record);
 
 #endif

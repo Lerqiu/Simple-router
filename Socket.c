@@ -65,35 +65,34 @@ void Socket_listening(int sockfd, unsigned long time)
     Output_all();
 }
 
-void Socket_send(int sockfd)
+static void _send(Record *record, int sockfd)
 {
-    Record **records = Repository_getAll();
-    unsigned n = Repository_getSize();
+    Repository *directly = Repository_GetDirectly();
 
-    for (unsigned i = 0; i < n; i++)
+    for (unsigned i = 0; i < directly->n; i++)
     {
-        Record *record = records[i];
-        if (!record->isDirectly)
-            continue;
+        Record *neighbor = directly->records[i];
 
         struct sockaddr_in address;
         bzero(&address, sizeof(address));
 
         address.sin_family = AF_INET;
         address.sin_port = htons(54321);
-        address.sin_addr.s_addr = htobe32(IP_Broadcast(record->addr, record->mask));
+        address.sin_addr.s_addr = htobe32(IP_Broadcast(neighbor->nextAddr, neighbor->mask));
 
-        for (unsigned y = 0; y < n; y++)
+        if (sendto(sockfd, Record_to_udpMessage(record), UDP_MESSAGE_SIZE, 0, (struct sockaddr *)&address, sizeof(address)) != UDP_MESSAGE_SIZE)
         {
-            if (y != i)
-            {
-                if (sendto(sockfd, Record_to_udpMessage(record), UDP_MESSAGE_SIZE, 0, (struct sockaddr *)&address, sizeof(address)) != UDP_MESSAGE_SIZE)
-                {
-                    fprintf(stderr, "sendto error: %s\n", strerror(errno));
-                    // exit(EXIT_FAILURE);
-                    record->silentToursN = MAX_ALIVE;
-                }
-            }
+            neighbor->distance = MAX_DISTANCE;
+            if (record->nextAddr == neighbor->nextAddr)
+                record->distance = MAX_DISTANCE;
         }
     }
+}
+
+void Socket_send(int sockfd)
+{
+    Repository *repo = Repository_GetAlive();
+
+    for (unsigned i = 0; i < repo->n; i++)
+        _send(repo->records[i], sockfd);
 }

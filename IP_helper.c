@@ -8,9 +8,15 @@ uint32_t IP_Broadcast(uint32_t addr, uint8_t mask)
     return addr | ((1 << (32 - mask)) - 1);
 }
 
+uint32_t IP_Network(uint32_t addr, uint8_t mask)
+{
+    return addr & ~((1 << (32 - mask)) - 1);
+}
+
+
 uint8_t *Record_to_udpMessage(Record *record)
 {
-    uint8_t message[9];
+    static uint8_t message[9];
     uint32_t addr = IP_Broadcast(record->addr, record->mask);
     uint8_t mask = record->mask;
     uint32_t distance = record->distance;

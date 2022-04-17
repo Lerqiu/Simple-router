@@ -16,7 +16,7 @@
         }                                                                      \
     }
 
-void _printAddr(uint32_t addr)
+static void _printAddr(uint32_t addr)
 {
     msg("%u.%u.%u.%u",
         (addr >> (3 * 8)) & 0xFF,
@@ -27,24 +27,19 @@ void _printAddr(uint32_t addr)
 
 void Output_one(Record *record)
 {
-    if (!record->isActive)
-        return;
-
     _printAddr(record->addr);
     printf("/%u ", record->mask);
 
     msg("distance %u ", record->distance);
 
-    if (record->isDirectly)
+    if (Repository_containsEntry(Repository_GetDirectly(), record->addr))
         msg("connected directly\n") else _printAddr(record->nextAddr);
 }
 
 void Output_all()
 {
-    Record **records = Repository_getAll();
-    unsigned n = Repository_getSize();
+    Repository *repo = Repository_GetAlive();
 
-    for (unsigned i = 0; i < n; i++)
-        if (records[i]->isActive)
-            Output_one(records[i]);
+    for (unsigned i = 0; i < repo->n; i++)
+        Output_one(repo->records[i]);
 }
