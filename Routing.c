@@ -22,19 +22,21 @@ static void _merge(Repository *repo, Record *record)
     if (Repository_containsEntry(repo, record->addr))
     {
         Record *oldEntry = Repository_getEntry(repo, record->addr);
-        if (oldEntry->distance > record->distance)
-        {
-            oldEntry->distance = record->distance;
-            oldEntry->nextAddr = record->nextAddr;
-        }
 
         Repository *directly = Repository_GetDirectly();
         if (record->nextAddr == oldEntry->nextAddr &&
             !Repository_containsEntry(directly, record->addr))
         {
             oldEntry->distance = record->distance;
+            oldEntry->silentToursN = 0;
         }
-        oldEntry->silentToursN = 0;
+
+        if (oldEntry->distance > record->distance)
+        {
+            oldEntry->distance = record->distance;
+            oldEntry->nextAddr = record->nextAddr;
+            oldEntry->silentToursN = 0;
+        }
         // printf("Modyfikacja wpisu: ");
         // Output_one(oldEntry);
     }
@@ -79,7 +81,7 @@ void Routing_receive(int sockfd)
         record.nextAddr = be32toh(sender.sin_addr.s_addr);
         record.silentToursN = 0;
 
-        //printf("Massage: From<->%u Network<->%u Mask<->%u", record.nextAddr, record.addr,record.mask);
+        // printf("Massage: From<->%u Network<->%u Mask<->%u", record.nextAddr, record.addr,record.mask);
         printf("---");
         Output_one(&record);
         _updateRoutingTable(&record);
