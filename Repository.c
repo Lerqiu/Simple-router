@@ -25,14 +25,11 @@ static Record *_copyRecord(Record *record)
 
 void Repository_Init()
 {
-    fprintf(stderr, "Start 'Repository_Init'\n");
     RDirectly.n = Input_getN();
     RAlive.n = RDirectly.n;
-    fprintf(stderr, "N 'Repository_Init'\n");
 
     RDirectly.records = malloc(sizeof(Record *) * RDirectly.n);
     RAlive.records = malloc(sizeof(Record *) * RDirectly.n);
-    fprintf(stderr, "Malloc 'Repository_Init'\n");
 
     for (int i = 0; i < RDirectly.n; i++)
     {

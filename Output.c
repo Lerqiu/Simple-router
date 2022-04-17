@@ -33,7 +33,11 @@ void Output_one(Record *record)
     msg("distance %u ", record->distance);
 
     if (Repository_containsEntry(Repository_GetDirectly(), record->addr))
-        msg("connected directly\n") else _printAddr(record->nextAddr);
+        msg("connected directly\n") else
+        {
+            _printAddr(record->nextAddr);
+            msg("\n");
+        }
 }
 
 void Output_all()
