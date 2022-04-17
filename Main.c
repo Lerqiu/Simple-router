@@ -14,10 +14,10 @@ int main(int argc, char *argv[])
   Output_all();
 
   int sockfd = Socket_create();
-  int a=0;
+  int a = 0;
   while (true)
   {
-    printf("Wpis: %d\n",a++);
+    printf("Wpis: %d\n", a++);
     Socket_listening(sockfd, MAXTIMEOUT);
     Socket_send(sockfd);
     Routing_removeOld();

@@ -79,7 +79,7 @@ void Routing_receive(int sockfd)
         record.nextAddr = be32toh(sender.sin_addr.s_addr);
         record.silentToursN = 0;
 
-        // printf("Massage: From<->%u Network<->%u Mask<->%u", from, from, mask);
+        printf("Massage: From<->%u Network<->%u Mask<->%u", record.nextAddr, record.addr,record.mask);
         _updateRoutingTable(&record);
     }
 }
@@ -107,8 +107,8 @@ void Routing_removeOld()
                     if (RAlive->records[y]->nextAddr == record->nextAddr)
                         RAlive->records[y]->distance = MAX_DISTANCE;
             }
-            // printf("Usuwanie wpisu: ");
-            // Output_one(record);
+            printf("Usuwanie wpisu: ");
+            Output_one(record);
             Repository_removeEntry(RAlive, record);
         }
     }
