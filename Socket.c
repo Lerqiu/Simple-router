@@ -89,10 +89,28 @@ static void _send(Record *record, int sockfd)
     }
 }
 
+static void _send_aliveNotify(Record *record, int sockfd)
+{
+    Record *neighbor = record;
+
+    struct sockaddr_in address;
+    bzero(&address, sizeof(address));
+
+    address.sin_family = AF_INET;
+    address.sin_port = htons(54321);
+    address.sin_addr.s_addr = htobe32(IP_Broadcast(neighbor->nextAddr, neighbor->mask));
+
+    sendto(sockfd, Record_to_udpMessage(record), UDP_MESSAGE_SIZE, 0, (struct sockaddr *)&address, sizeof(address));
+}
+
 void Socket_send(int sockfd)
 {
     Repository *repo = Repository_GetAlive();
 
     for (unsigned i = 0; i < repo->n; i++)
         _send(repo->records[i], sockfd);
+
+    repo = Repository_GetDirectly();
+    for (unsigned i = 0; i < repo->n; i++)
+        _send_aliveNotify(repo->records[i], sockfd);
 }
