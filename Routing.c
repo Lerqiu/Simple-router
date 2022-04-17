@@ -79,7 +79,9 @@ void Routing_receive(int sockfd)
         record.nextAddr = be32toh(sender.sin_addr.s_addr);
         record.silentToursN = 0;
 
-        printf("Massage: From<->%u Network<->%u Mask<->%u", record.nextAddr, record.addr,record.mask);
+        //printf("Massage: From<->%u Network<->%u Mask<->%u", record.nextAddr, record.addr,record.mask);
+        printf("---");
+        Output_one(&record);
         _updateRoutingTable(&record);
     }
 }
