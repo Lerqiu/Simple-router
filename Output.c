@@ -29,18 +29,18 @@ void Output_one(Record *record)
 {
     // static unsigned counter = 0;
     // printf("W:%u\n",counter++);
-    
+
     _printAddr(record->addr);
     printf("/%u ", record->mask);
 
     msg("distance %u ", record->distance);
 
     if (Repository_containsEntry(Repository_GetDirectly(), record->addr))
-        msg("connected directly\n") else
-        {
+        msg("connected directly ") //else
+       // {
             _printAddr(record->nextAddr);
             msg("\n");
-        }
+      //  }
 }
 
 void Output_all()
