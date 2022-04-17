@@ -1,7 +1,7 @@
 #ifndef MY_MAIN
 #define MY_MAIN
 
-#define MAXTIMEOUT 1
+#define MAXTIMEOUT 10
 
 #define MAX_DISTANCE 8
 #define MAX_ALIVE 4
