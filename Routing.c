@@ -28,7 +28,7 @@ static unsigned max(unsigned a, unsigned b)
     return a > b ? a : b;
 }
 
-static void _mergeSource(Repository *repo, Record *record)
+void Routing_mergeSource(Repository *repo, Record *record)
 {
     if (Repository_containsEntry(repo, record->addr))
     {
@@ -93,7 +93,7 @@ void _updateRoutingTable(Record *received)
     Repository *RAlive = Repository_GetAlive();
     Repository *RDirectly = Repository_GetDirectly();
 
-    _mergeSource(RAlive, Repository_getEntryByNext(RDirectly, received->nextAddr));
+    Routing_mergeSource(RAlive, Repository_getEntryByNext(RDirectly, received->nextAddr));
 
     Record *source = Repository_getEntryByNext(RDirectly, received->nextAddr);
     received->distance = received->distance >= MAX_DISTANCE || source->distance + received->distance >= MAX_DISTANCE ? UINT_MAX : source->distance + received->distance;

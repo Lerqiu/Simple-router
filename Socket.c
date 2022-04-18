@@ -101,9 +101,9 @@ static void _send_aliveNotify(Record *neighbor, int sockfd)
     address.sin_port = htons(54321);
     address.sin_addr.s_addr = htobe32(IP_Broadcast(neighbor->nextAddr, neighbor->mask));
 
-    if (sendto(sockfd, Record_to_udpMessage(neighbor), UDP_MESSAGE_SIZE, 0, (struct sockaddr *)&address, sizeof(address)) == UDP_MESSAGE_SIZE)
-        Routing_mergeRecord(Repository_GetAlive(), neighbor);
-    else if (Repository_containsEntry(Repository_GetAlive(), neighbor->addr))
+    if (sendto(sockfd, Record_to_udpMessage(neighbor), UDP_MESSAGE_SIZE, 0, (struct sockaddr *)&address, sizeof(address)) != UDP_MESSAGE_SIZE)
+        /*Routing_mergeSource(Repository_GetAlive(), neighbor);
+    else */if (Repository_containsEntry(Repository_GetAlive(), neighbor->addr))
     {
         Record *dire = Repository_getEntry(Repository_GetAlive(), neighbor->addr);
         if (dire->nextAddr == neighbor->nextAddr)
