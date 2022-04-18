@@ -82,9 +82,7 @@ static void _send(Record *record, int sockfd)
 
         if (sendto(sockfd, Record_to_udpMessage(record), UDP_MESSAGE_SIZE, 0, (struct sockaddr *)&address, sizeof(address)) != UDP_MESSAGE_SIZE)
         {
-            neighbor->distance = MAX_DISTANCE;
-            if (record->nextAddr == neighbor->nextAddr)
-                record->silentToursN = MAX_ALIVE;
+            record->distance = MAX_DISTANCE;
         }
     }
 }
@@ -104,7 +102,7 @@ static void _send_aliveNotify(Record *neighbor, int sockfd)
         {
             Record *dire = Repository_getEntry(Repository_GetAlive(), neighbor->addr);
             if (dire->nextAddr == neighbor->nextAddr)
-                dire->silentToursN = 0;
+                dire->distance = MAX_DISTANCE;
         }
     }
     else
