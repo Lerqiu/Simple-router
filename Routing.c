@@ -78,7 +78,7 @@ void _updateRoutingTable(Record *received)
     _mergeSource(RAlive, Repository_getEntryByNext(RDirectly, received->nextAddr));
 
     Record *source = Repository_getEntryByNext(RDirectly, received->nextAddr);
-    received->distance = received->distance >= MAX_DISTANCE || source->distance + received->distance ? UINT_MAX : source->distance + received->distance;
+    received->distance = received->distance >= MAX_DISTANCE || source->distance + received->distance >= MAX_DISTANCE ? UINT_MAX : source->distance + received->distance;
     _merge(RAlive, received);
 }
 
