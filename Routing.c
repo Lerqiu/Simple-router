@@ -161,6 +161,8 @@ void Routing_age()
 
 void Routing_PrepareToRemove(Record *record)
 {
+    if(record->distance == MAX_DISTANCE && record->silentToursN = MAX_ALIVE )
+        return;
     record->distance = max(MAX_DISTANCE, record->distance);
     record->silentToursN = max(MAX_ALIVE, record->silentToursN);
 
