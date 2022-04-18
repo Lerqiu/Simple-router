@@ -66,7 +66,8 @@ static void _merge(Repository *repo, Record *record)
     }
     else
     {
-        Repository_addEntry(repo, record->addr, record->mask, record->nextAddr, record->distance);
+        if (record->distance < MAX_DISTANCE)
+            Repository_addEntry(repo, record->addr, record->mask, record->nextAddr, record->distance);
     }
 }
 
