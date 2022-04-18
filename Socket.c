@@ -86,7 +86,7 @@ static void _send(Record *record, int sockfd)
             {
                 Record *dire = Repository_getEntry(Repository_GetAlive(), neighbor->addr);
                 if (dire->nextAddr == neighbor->nextAddr)
-                    dire->distance = MAX_DISTANCE;
+                    Routing_PrepareToRemove(dire);
             }
         }
     }
@@ -102,17 +102,12 @@ static void _send_aliveNotify(Record *neighbor, int sockfd)
     address.sin_addr.s_addr = htobe32(IP_Broadcast(neighbor->nextAddr, neighbor->mask));
 
     if (sendto(sockfd, Record_to_udpMessage(neighbor), UDP_MESSAGE_SIZE, 0, (struct sockaddr *)&address, sizeof(address)) == UDP_MESSAGE_SIZE)
+        Routing_mergeRecord(Repository_GetAlive(), neighbor);
+    else if (Repository_containsEntry(Repository_GetAlive(), neighbor->addr))
     {
-        if (Repository_containsEntry(Repository_GetAlive(), neighbor->addr))
-        {
-            Record *dire = Repository_getEntry(Repository_GetAlive(), neighbor->addr);
-            if (dire->nextAddr == neighbor->nextAddr)
-                dire->distance = MAX_DISTANCE;
-        }
-    }
-    else
-    {
-        printf("Error: %s\n", strerror(errno));
+        Record *dire = Repository_getEntry(Repository_GetAlive(), neighbor->addr);
+        if (dire->nextAddr == neighbor->nextAddr)
+            Routing_PrepareToRemove(dire);
     }
 }
 

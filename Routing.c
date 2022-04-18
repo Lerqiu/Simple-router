@@ -10,11 +10,22 @@
 #include "Main.h"
 #include <limits.h>
 #include "Output.h"
+#include "Routing.h"
 
 static bool _isAddrOfNeighbour(uint32_t addr)
 {
     Repository *directly = Repository_GetDirectly();
     return Repository_getEntryByNext(directly, addr);
+}
+
+// static unsigned min(unsigned a, unsigned b)
+// {
+//     return a > b ? b : a;
+// }
+
+static unsigned max(unsigned a, unsigned b)
+{
+    return a > b ? a : b;
 }
 
 static void _mergeSource(Repository *repo, Record *record)
@@ -35,7 +46,7 @@ static void _mergeSource(Repository *repo, Record *record)
     }
 }
 
-static void _merge(Repository *repo, Record *record)
+void Routing_mergeRecord(Repository *repo, Record *record)
 {
     if (Repository_containsEntry(repo, record->addr))
     {
@@ -52,7 +63,13 @@ static void _merge(Repository *repo, Record *record)
         {
             oldEntry->distance = record->distance;
             if (oldEntry->distance < MAX_DISTANCE)
+            {
                 oldEntry->silentToursN = 0;
+            }
+            else
+            {
+                Routing_PrepareToRemove(oldEntry);
+            }
             return;
         }
 
@@ -80,7 +97,7 @@ void _updateRoutingTable(Record *received)
 
     Record *source = Repository_getEntryByNext(RDirectly, received->nextAddr);
     received->distance = received->distance >= MAX_DISTANCE || source->distance + received->distance >= MAX_DISTANCE ? UINT_MAX : source->distance + received->distance;
-    _merge(RAlive, received);
+    Routing_mergeRecord(RAlive, received);
 }
 
 void Routing_receive(int sockfd)
@@ -120,24 +137,16 @@ void Routing_removeOld()
     {
         Record *record = RAlive->records[i];
 
+        if (record->distance >= MAX_DISTANCE)
+            record->silentToursN = max(record->silentToursN, MAX_ALIVE);
+
         if (record->silentToursN >= MAX_ALIVE || record->distance >= MAX_DISTANCE)
             record->distance = UINT_MAX;
-
-        if (record->distance >= MAX_DISTANCE)
-            record->silentToursN = record->silentToursN > MAX_ALIVE ? record->silentToursN : MAX_ALIVE;
 
         if (record->silentToursN >= REMOVE_THRESHOLD)
         {
             i--;
-            Record *next;
-            if ((next = Repository_getEntryByNext(Repository_GetDirectly(), record->nextAddr)) && next->addr == record->addr)
-            {
-                for (unsigned y = 0; y < RAlive->n; y++)
-                    if (RAlive->records[y]->nextAddr == record->nextAddr)
-                        RAlive->records[y]->distance = UINT_MAX;
-            }
-            // printf("Usuwanie wpisu: ");
-            // Output_one(record);
+            Routing_PrepareToRemove(record);
             Repository_removeEntry(RAlive, record);
         }
     }
@@ -148,4 +157,22 @@ void Routing_age()
     Repository *RAlive = Repository_GetAlive();
     for (unsigned i = 0; i < RAlive->n; i++)
         RAlive->records[i]->silentToursN++;
+}
+
+void Routing_PrepareToRemove(Record *record)
+{
+    record->distance = max(MAX_DISTANCE, record->distance);
+    record->silentToursN = max(MAX_ALIVE, record->silentToursN);
+
+    if (!Repository_containsEntry(Repository_GetDirectly(), record->addr))
+        return;
+
+    Repository *repo = Repository_GetAlive();
+    Record *direct = Repository_getEntry(Repository_GetDirectly(), record->addr);
+    if (direct->nextAddr == record->nextAddr)
+        for (unsigned i = 0; i < repo->n; i++)
+        {
+            if (direct->nextAddr == repo->records[i]->nextAddr)
+                Routing_PrepareToRemove(repo->records[i]);
+        }
 }
