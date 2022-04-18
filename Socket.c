@@ -82,7 +82,12 @@ static void _send(Record *record, int sockfd)
 
         if (sendto(sockfd, Record_to_udpMessage(record), UDP_MESSAGE_SIZE, 0, (struct sockaddr *)&address, sizeof(address)) != UDP_MESSAGE_SIZE)
         {
-            record->distance = MAX_DISTANCE;
+            if (Repository_containsEntry(Repository_GetAlive(), neighbor->addr))
+            {
+                Record *dire = Repository_getEntry(Repository_GetAlive(), neighbor->addr);
+                if (dire->nextAddr == neighbor->nextAddr)
+                    dire->distance = MAX_DISTANCE;
+            }
         }
     }
 }
