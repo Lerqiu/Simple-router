@@ -100,9 +100,16 @@ static void _send_aliveNotify(Record *neighbor, int sockfd)
 
     if (sendto(sockfd, Record_to_udpMessage(neighbor), UDP_MESSAGE_SIZE, 0, (struct sockaddr *)&address, sizeof(address)) == UDP_MESSAGE_SIZE)
     {
-        neighbor->silentToursN = 0;
-    }else{
-        printf("Error: %s\n",strerror(errno));
+        if (Repository_containsEntry(Repository_GetAlive(), neighbor->addr))
+        {
+            Record *dire = Repository_getEntry(Repository_GetAlive(), neighbor->addr);
+            if (dire->nextAddr == neighbor->nextAddr)
+                neighbor->silentToursN = 0;
+        }
+    }
+    else
+    {
+        printf("Error: %s\n", strerror(errno));
     }
 }
 
