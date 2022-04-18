@@ -84,7 +84,7 @@ static void _send(Record *record, int sockfd)
         {
             neighbor->distance = MAX_DISTANCE;
             if (record->nextAddr == neighbor->nextAddr)
-                record->distance = MAX_DISTANCE;
+                record->silentToursN = MAX_ALIVE;
         }
     }
 }
