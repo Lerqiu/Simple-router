@@ -101,6 +101,8 @@ static void _send_aliveNotify(Record *neighbor, int sockfd)
     if (sendto(sockfd, Record_to_udpMessage(neighbor), UDP_MESSAGE_SIZE, 0, (struct sockaddr *)&address, sizeof(address)) == UDP_MESSAGE_SIZE)
     {
         neighbor->silentToursN = 0;
+    }else{
+        printf("Error: %s\n",strerror(errno));
     }
 }
 
