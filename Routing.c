@@ -51,7 +51,7 @@ static void _merge(Repository *repo, Record *record)
         if (record->nextAddr == oldEntry->nextAddr)
         {
             oldEntry->distance = record->distance;
-            if (oldEntry->distance != UINT_MAX)
+            if (oldEntry->distance < MAX_DISTANCE)
                 oldEntry->silentToursN = 0;
             return;
         }
@@ -60,7 +60,8 @@ static void _merge(Repository *repo, Record *record)
         {
             oldEntry->distance = record->distance;
             oldEntry->nextAddr = record->nextAddr;
-            oldEntry->silentToursN = 0;
+            if (oldEntry->distance < MAX_DISTANCE)
+                oldEntry->silentToursN = 0;
         }
     }
     else
@@ -77,7 +78,7 @@ void _updateRoutingTable(Record *received)
     _mergeSource(RAlive, Repository_getEntryByNext(RDirectly, received->nextAddr));
 
     Record *source = Repository_getEntryByNext(RDirectly, received->nextAddr);
-    received->distance = received->distance == UINT_MAX ? UINT_MAX : source->distance + received->distance;
+    received->distance = received->distance >= MAX_DISTANCE || source->distance + received->distance ? UINT_MAX : source->distance + received->distance;
     _merge(RAlive, received);
 }
 
@@ -124,7 +125,7 @@ void Routing_removeOld()
         if (record->distance >= MAX_DISTANCE)
             record->silentToursN = record->silentToursN > MAX_ALIVE ? record->silentToursN : MAX_ALIVE;
 
-        if (record->silentToursN > REMOVE_THRESHOLD)
+        if (record->silentToursN >= REMOVE_THRESHOLD)
         {
             i--;
             Record *next;
@@ -132,7 +133,7 @@ void Routing_removeOld()
             {
                 for (unsigned y = 0; y < RAlive->n; y++)
                     if (RAlive->records[y]->nextAddr == record->nextAddr)
-                        RAlive->records[y]->distance = RAlive->records[y]->distance < MAX_DISTANCE ? MAX_DISTANCE : RAlive->records[y]->distance;
+                        RAlive->records[y]->distance = UINT_MAX;
             }
             // printf("Usuwanie wpisu: ");
             // Output_one(record);
