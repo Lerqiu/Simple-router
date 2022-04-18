@@ -104,7 +104,7 @@ static void _send_aliveNotify(Record *neighbor, int sockfd)
         {
             Record *dire = Repository_getEntry(Repository_GetAlive(), neighbor->addr);
             if (dire->nextAddr == neighbor->nextAddr)
-                neighbor->silentToursN = 0;
+                dire->silentToursN = 0;
         }
     }
     else
