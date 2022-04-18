@@ -89,10 +89,8 @@ static void _send(Record *record, int sockfd)
     }
 }
 
-static void _send_aliveNotify(Record *record, int sockfd)
+static void _send_aliveNotify(Record *neighbor, int sockfd)
 {
-    Record *neighbor = record;
-
     struct sockaddr_in address;
     bzero(&address, sizeof(address));
 
@@ -100,7 +98,10 @@ static void _send_aliveNotify(Record *record, int sockfd)
     address.sin_port = htons(54321);
     address.sin_addr.s_addr = htobe32(IP_Broadcast(neighbor->nextAddr, neighbor->mask));
 
-    sendto(sockfd, Record_to_udpMessage(record), UDP_MESSAGE_SIZE, 0, (struct sockaddr *)&address, sizeof(address));
+    if (sendto(sockfd, Record_to_udpMessage(neighbor), UDP_MESSAGE_SIZE, 0, (struct sockaddr *)&address, sizeof(address)) == UDP_MESSAGE_SIZE)
+    {
+        neighbor->silentToursN = 0;
+    }
 }
 
 void Socket_send(int sockfd)

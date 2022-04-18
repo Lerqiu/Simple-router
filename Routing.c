@@ -17,34 +17,55 @@ static bool _isAddrOfNeighbour(uint32_t addr)
     return Repository_getEntryByNext(directly, addr);
 }
 
-static void _merge(Repository *repo, Record *record)
+static void _mergeSource(Repository *repo, Record *record)
 {
     if (Repository_containsEntry(repo, record->addr))
     {
         Record *oldEntry = Repository_getEntry(repo, record->addr);
-
-        Repository *directly = Repository_GetDirectly();
-        if (record->nextAddr == oldEntry->nextAddr &&
-            !Repository_containsEntry(directly, record->addr))
-        {
-            oldEntry->distance = record->distance;
-            oldEntry->silentToursN = 0;
-        }
-
-        if (oldEntry->distance > record->distance)
+        if (oldEntry->distance >= record->distance)
         {
             oldEntry->distance = record->distance;
             oldEntry->nextAddr = record->nextAddr;
             oldEntry->silentToursN = 0;
         }
-        // printf("Modyfikacja wpisu: ");
-        // Output_one(oldEntry);
     }
     else
     {
         Repository_addEntry(repo, record->addr, record->mask, record->nextAddr, record->distance);
-        // printf("Dodawanie wpisu: ");
-        // Output_one(record);
+    }
+}
+
+static void _merge(Repository *repo, Record *record)
+{
+    if (Repository_containsEntry(repo, record->addr))
+    {
+        Record *oldEntry = Repository_getEntry(repo, record->addr);
+        Repository *directly = Repository_GetDirectly();
+
+        Record *nextTo;
+        if (record->nextAddr == oldEntry->nextAddr &&
+            (nextTo = Repository_getEntryByNext(directly, record->nextAddr)) &&
+            nextTo->addr == record->addr)
+            return;
+
+        if (record->nextAddr == oldEntry->nextAddr)
+        {
+            oldEntry->distance = record->distance;
+            if (oldEntry->distance != UINT_MAX)
+                oldEntry->silentToursN = 0;
+            return;
+        }
+
+        if (oldEntry->distance >= record->distance)
+        {
+            oldEntry->distance = record->distance;
+            oldEntry->nextAddr = record->nextAddr;
+            oldEntry->silentToursN = 0;
+        }
+    }
+    else
+    {
+        Repository_addEntry(repo, record->addr, record->mask, record->nextAddr, record->distance);
     }
 }
 
@@ -53,9 +74,10 @@ void _updateRoutingTable(Record *received)
     Repository *RAlive = Repository_GetAlive();
     Repository *RDirectly = Repository_GetDirectly();
 
-    Record *prevNext = Repository_getEntryByNext(RDirectly, received->nextAddr);
-    _merge(RAlive, prevNext);
-    received->distance = received->distance == UINT_MAX ? UINT_MAX : prevNext->distance + received->distance;
+    _mergeSource(RAlive, Repository_getEntryByNext(RDirectly, received->nextAddr));
+
+    Record *source = Repository_getEntry(RAlive, received->addr);
+    received->distance = received->distance == UINT_MAX ? UINT_MAX : source->distance + received->distance;
     _merge(RAlive, received);
 }
 
@@ -105,14 +127,15 @@ void Routing_removeOld()
         if (record->silentToursN > REMOVE_THRESHOLD)
         {
             i--;
-            if (Repository_getEntryByNext(Repository_GetDirectly(), record->nextAddr))
+            Record *next;
+            if ((next = Repository_getEntryByNext(Repository_GetDirectly(), record->nextAddr)) && next->addr == record->addr)
             {
                 for (unsigned y = 0; y < RAlive->n; y++)
                     if (RAlive->records[y]->nextAddr == record->nextAddr)
-                        RAlive->records[y]->distance = MAX_DISTANCE;
+                        RAlive->records[y]->distance = RAlive->records[y]->distance < MAX_DISTANCE ? MAX_DISTANCE : RAlive->records[y]->distance;
             }
-            printf("Usuwanie wpisu: ");
-            Output_one(record);
+            // printf("Usuwanie wpisu: ");
+            // Output_one(record);
             Repository_removeEntry(RAlive, record);
         }
     }

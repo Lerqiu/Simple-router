@@ -33,7 +33,7 @@ void Output_one(Record *record)
     _printAddr(record->addr);
     printf("/%u ", record->mask);
 
-    msg("distance %u ", record->distance);
+    msg("distance %u [%u]", record->distance,record->silentToursN);
 
     if (Repository_containsEntry(Repository_GetDirectly(), record->addr))
         msg("connected directly ") //else
