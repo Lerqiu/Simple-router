@@ -34,4 +34,6 @@ bool Repository_containsEntry(Repository *repo, uint32_t addr);
 Record *Repository_addEntry(Repository *repo, uint32_t addr, uint8_t mask, uint32_t next, uint32_t distance);
 void Repository_removeEntry(Repository *repo, Record *record);
 
+bool Repository_isDirectly(Record *record);
+
 #endif

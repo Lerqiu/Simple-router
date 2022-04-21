@@ -119,3 +119,18 @@ void Repository_removeEntry(Repository *repo, Record *record)
     repo->records = newData;
     repo->n--;
 }
+
+bool Repository_isDirectly(Record *record)
+{
+    Repository *repo = Repository_GetDirectly();
+    for (unsigned i = 0; i < repo->n; i++)
+    {
+        Record *r = repo->records[i];
+        if (record->addr == r->addr &&
+            record->distance == r->distance &&
+            record->nextAddr == r->nextAddr &&
+            record->mask == r->mask)
+            return true;
+    }
+    return false;
+}

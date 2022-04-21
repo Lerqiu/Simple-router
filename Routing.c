@@ -46,25 +46,18 @@ void Routing_mergeRecord(Repository *repo, Record *record)
     if (Repository_containsEntry(repo, record->addr))
     {
         Record *oldEntry = Repository_getEntry(repo, record->addr);
-        Repository *directly = Repository_GetDirectly();
 
-        Record *nextTo;
-        if (record->nextAddr == oldEntry->nextAddr &&
-            (nextTo = Repository_getEntryByNext(directly, record->nextAddr)) &&
-            nextTo->addr == record->addr)
+        if (Repository_isDirectly(record))
             return;
 
         if (record->nextAddr == oldEntry->nextAddr)
         {
             oldEntry->distance = record->distance;
             if (oldEntry->distance < MAX_DISTANCE)
-            {
                 oldEntry->silentToursN = 0;
-            }
             else
-            {
                 Routing_PrepareToRemove(oldEntry);
-            }
+
             return;
         }
 
@@ -153,7 +146,7 @@ void Routing_age()
 
 void Routing_PrepareToRemove(Record *record)
 {
-    if(record->distance == MAX_DISTANCE && record->silentToursN == MAX_ALIVE )
+    if (record->distance == MAX_DISTANCE && record->silentToursN == MAX_ALIVE)
         return;
     record->distance = max(MAX_DISTANCE, record->distance);
     record->silentToursN = max(MAX_ALIVE, record->silentToursN);
