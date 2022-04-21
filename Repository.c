@@ -127,7 +127,6 @@ bool Repository_isDirectly(Record *record)
     {
         Record *r = repo->records[i];
         if (record->addr == r->addr &&
-            record->distance == r->distance &&
             record->nextAddr == r->nextAddr &&
             record->mask == r->mask)
             return true;
