@@ -11,16 +11,14 @@
 int main(int argc, char *argv[])
 {
   Repository_Init();
-  Output_all();
 
   int sockfd = Socket_create();
-  int a = 0;
   while (true)
   {
-    printf("Wpis: %d\n", a++);
     Socket_listening(sockfd, MAXTIMEOUT);
     Socket_send(sockfd);
     Routing_removeOld();
+    Output_all();
     Routing_age();
   }
 

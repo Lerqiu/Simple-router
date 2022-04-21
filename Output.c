@@ -27,20 +27,15 @@ static void _printAddr(uint32_t addr)
 
 void Output_one(Record *record)
 {
-    // static unsigned counter = 0;
-    // printf("W:%u\n",counter++);
-
     _printAddr(record->addr);
     printf("/%u ", record->mask);
 
-    msg("distance %u [%u]", record->distance,record->silentToursN);
+    msg("distance %u ", record->distance);
 
-    if (Repository_containsEntry(Repository_GetDirectly(), record->addr))
-        msg("connected directly ") //else
-       // {
-            _printAddr(record->nextAddr);
-            msg("\n");
-      //  }
+    if (Repository_containsEntry(Repository_GetDirectly(), record->addr) &&
+        Repository_getEntry(Repository_GetDirectly(), record->addr)->nextAddr == record->nextAddr)
+        msg("connected directly ") else _printAddr(record->nextAddr);
+    msg("\n");
 }
 
 void Output_all()
@@ -49,4 +44,5 @@ void Output_all()
 
     for (unsigned i = 0; i < repo->n; i++)
         Output_one(repo->records[i]);
+    msg("\n");
 }

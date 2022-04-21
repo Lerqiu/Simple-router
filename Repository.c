@@ -12,30 +12,13 @@ static Repository RDirectly = {.n = 0, .records = NULL};
 
 /* ---> Repository static <--- */
 
-static Record *_copyRecord(Record *record)
-{
-    Record *new = malloc(sizeof(Record));
-    new->addr = record->addr;
-    new->distance = record->distance;
-    new->mask = record->mask;
-    new->nextAddr = record->nextAddr;
-    new->silentToursN = record->silentToursN;
-    return new;
-}
-
 void Repository_Init()
 {
     RDirectly.n = Input_getN();
-    RAlive.n = RDirectly.n;
-
     RDirectly.records = malloc(sizeof(Record *) * RDirectly.n);
-    RAlive.records = malloc(sizeof(Record *) * RDirectly.n);
 
     for (int i = 0; i < RDirectly.n; i++)
-    {
         RDirectly.records[i] = Input_getRecord();
-        RAlive.records[i] = _copyRecord(RDirectly.records[i]);
-    }
 }
 static void _free(Repository *repo)
 {

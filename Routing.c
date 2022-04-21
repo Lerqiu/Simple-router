@@ -18,11 +18,6 @@ static bool _isAddrOfNeighbour(uint32_t addr)
     return Repository_getEntryByNext(directly, addr);
 }
 
-// static unsigned min(unsigned a, unsigned b)
-// {
-//     return a > b ? b : a;
-// }
-
 static unsigned max(unsigned a, unsigned b)
 {
     return a > b ? a : b;
@@ -122,9 +117,6 @@ void Routing_receive(int sockfd)
         record.nextAddr = be32toh(sender.sin_addr.s_addr);
         record.silentToursN = 0;
 
-        // printf("Massage: From<->%u Network<->%u Mask<->%u", record.nextAddr, record.addr,record.mask);
-        printf("---");
-        Output_one(&record);
         _updateRoutingTable(&record);
     }
 }
